@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <title>Testing Page</title>
+    <style>
+      body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 100%;
+}
+
+.left-frame, .right-frame {
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.left-frame {
+    background-color: #f0f0f0;
+}
+
+    #csvContent_table table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 50%;
+      }
+      td, th, tr {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 4px;
+        font-family: Calibri, sans-serif;
+        font-size: 12px;
+
+      }
+      pre {
+            background-color: #f3f3f3;
+            padding: 10px;
+            border: 1px solid #ccc;
+            overflow-x: auto;
+        }
+        #copyButton {
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+<head>
+</head>
+<body>
+  <div class="container">
+    <div class="left-frame" >
+      <h2>upload csv file here</h2>
+      <input type="file" id="csvFileInput" accept=".csv">
+      <br>
+      <button id="read_csv">Read CSV</button>
+      <div id="csvContent"></div>
+      <div id="showContent"></div>
+    </div>
+    <div class="right-frame">
+      <h2>Result view</h2>
+      <button id="generate_file">Web</button>
+      <button id="generate_android_file">Android</button>
+      <button id="generate_ios_file">iOS</button>
+      <button id="copyButton">Copy JSON</button>
+    <pre id="jsonContainer"></pre>
+    <button id="copyTable">Copy Table</button>
+    <table id="tableContainer">
+      <tr >
+        <th>Data layer Path</th>
+        <th>Description</th>
+      </tr>
+    </table>
+    </div>
+  </div>
+    <script src="techspecpage.js"></script>
+</body>
+</html>
