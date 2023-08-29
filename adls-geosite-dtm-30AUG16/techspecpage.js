@@ -309,3 +309,78 @@ function copyToClipboard(text) {
     document.body.removeChild(tempElement);
 }
 }
+
+document.getElementById('jsonInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    
+    if (file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        const fileContent = event.target.result;
+        try {
+          const jsonData = JSON.parse(fileContent);
+          document.getElementById('output').textContent = JSON.stringify(jsonData, null, 2);
+          var schema_json = JSON.stringify(jsonData, null, 2);
+          function jsonPathToLines(jsonObj, parentPath = '') {
+              let lines = [];
+          
+              if (typeof jsonObj === 'object') {
+                  for (const key in jsonObj) {
+                      const value = jsonObj[key];
+                      const newPath = parentPath ? `${parentPath}.${key}` : key;
+          
+                      if (typeof value === 'object' && value !== null) {
+                          lines = lines.concat(jsonPathToLines(value, newPath));
+                      } else {
+                          lines.push(newPath);
+                      }
+                  }
+              }
+          
+              return lines;
+          }
+          
+          // Example JSON object
+          const jsonObject = JSON.parse(schema_json);
+          
+          const lines = jsonPathToLines(jsonObject);
+          
+          lines.forEach(line => {
+              console.log(line);
+          });
+          function convertArrayOfRowsToCSV(rows) {
+              const separator = ','; // CSV separator
+              console.log(rows);
+              // Build CSV content
+              var csvContent = "";
+              for(i=0;i<rows.length;i++){
+                  csvContent+= rows[i]+',\n'
+              }
+              
+              return csvContent;
+            }
+        
+            function downloadCSV(csvContent, fileName) {
+              const blob = new Blob([csvContent], { type: 'text/csv' });
+              const link = document.createElement('a');
+              link.href = window.URL.createObjectURL(blob);
+              link.download = fileName;
+              link.click();
+            }
+        
+            const data = lines;
+        
+            document.getElementById('download_csv').addEventListener('click', () => {
+              const csvContent = convertArrayOfRowsToCSV(data);
+              console.log(csvContent)
+              downloadCSV(csvContent, 'data.csv');
+            });
+        } catch (error) {
+          document.getElementById('output').textContent = 'Error parsing JSON: ' + error.message;
+        }
+      };
+      
+      reader.readAsText(file);
+    }
+  });
