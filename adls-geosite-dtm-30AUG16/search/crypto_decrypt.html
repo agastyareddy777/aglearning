@@ -58,7 +58,51 @@ element.addEventListener("click", myFunction);
 
 function myFunction() {
 var enc_value  = document.getElementById("encrypt").value;
-  document.getElementById("demo").innerHTML = "Hello World";
+// Assuming you have this Base64-encoded string
+let encryptedBase64 = enc_value.toString(); // Encrypted data
+
+// Convert Base64 to ArrayBuffer for the encrypted data
+let encryptedBinaryString = atob(encryptedBase64);
+let encryptedArrayBuffer = Uint8Array.from(encryptedBinaryString, c => c.charCodeAt(0)).buffer;
+
+// Convert Base64 to ArrayBuffer for the key
+let keyBase64 = 'Foyfct6UWw1z+WTO8fBGra1iZ70C/A2fkh53ItboLOU='; // The same key used for encryption
+let keyBinaryString = atob(keyBase64);
+let keyArrayBuffer = Uint8Array.from(keyBinaryString, c => c.charCodeAt(0)).buffer;
+
+crypto.subtle.importKey(
+    'raw', // format
+    keyArrayBuffer, // the key in ArrayBuffer format
+    {   // algorithm details
+        name: 'AES-CBC',
+        length: 256
+    },
+    true, // extractable
+    ['decrypt'] // usage
+)
+.then(key => {
+    // Constant IV (not recommended for production use)
+    let iv = new Uint8Array(16); // AES-CBC requires a 16-byte IV
+
+    crypto.subtle.decrypt(
+        {
+            name: 'AES-CBC',
+            iv: iv // Constant IV
+        },
+        key, // key from importKey
+        encryptedArrayBuffer // data to decrypt
+    )
+    .then(decrypted => {
+        // Convert the decrypted ArrayBuffer to text
+        let decoder = new TextDecoder();
+        let decryptedText = decoder.decode(decrypted);
+        console.log('Decrypted:', decryptedText);
+document.getElementById("demo").innerHTML = decryptedText;
+    })
+    .catch(error => console.error('Decryption error:', error));
+})
+.catch(error => console.error('Key import error:', error));
+  
 }
 </body>
 
