@@ -1,1 +1,65 @@
+<html>
 
+<head>
+
+
+
+    <title>Crypto Decryption</title>
+    <style type="text/css">
+        body {
+            font-family: Helvetica, Arial;
+            font-size: 12px;
+        }
+        .result {
+            font-size: 12px;
+        }
+        .stitle {
+            color: #3300cc;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .sptitle a {
+            color: #ff0000;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .sptitle a:hover {
+            color: #3300cc;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .link {
+            color: #009900;
+        }
+        .search {
+            border: 2px solid #669900;
+        }
+        .search:hover {
+            background-color: #669900;
+            color: #fff;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<input type="text" id="encrypt" name="encrypt"><br><br>
+<button id="myBtn">Try it</button>
+
+<p id="demo">
+
+<script>
+const element = document.getElementById("myBtn");
+element.addEventListener("click", myFunction);
+
+function myFunction() {
+var enc_value  = document.getElementById("encrypt").value;
+  document.getElementById("demo").innerHTML = "Hello World";
+}
+</body>
+
+</html>
