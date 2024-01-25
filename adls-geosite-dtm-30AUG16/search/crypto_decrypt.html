@@ -52,6 +52,11 @@
 
 <p id="demo"></p>
 
+
+<input type="text" id="encrypt2" name="encrypt2"><br><br>
+<button id="myBtn2">Try it</button>
+
+<p id="demo2"></p>
 <script>
 const element = document.getElementById("myBtn");
 element.addEventListener("click", myFunction);
@@ -104,6 +109,46 @@ document.getElementById("demo").innerHTML = decryptedText;
 .catch(error => console.error('Key import error:', error));
   
 }
+
+const element = document.getElementById("myBtn2");
+element.addEventListener("click", myFunction2);
+
+function myFunction2() {
+let privateKeyBase64 = 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCMugNuKZKsDvdmMcwDVOa6UaoYm/otHeDKIu8oIX05xmzB4Nfn5P6egFdWZW8r3zqwfZeKYRZZh6tn43wYoE0d8+XvIGLwHPMbEig0NJOP9WJo4Wqu8iYiRjMr7dnC/AacgMm6+IXm+fppgbtiL94nc59VTSNUqu8BQhF3Tkphn+B9hsL5nVNQ5OhUMYnkOdrNxRCBcFLxS/VjAtSIsgqwydhMS7JLCTQMWEoZOtlM9UzZH8+aS3+ZJRBhl1aG0EtjQmfMFMQg5t2fg6Mt5v5jzc12Cx5cDOTpRLwNeW0tCJlFUb9OqWPoC5vYFlou9IpvgN1Mt1viVfh0xkONLI9rAgMBAAECggEAL1peUiDaElx84h3qhMp6UwKsxlgh8DGIFOx5ZhsSvLCoovqKHCVhiisseE1sgao9YOr55Z3yu9CbnDsfZFf4axZJblQLBrnvEdJjxeFVMBFFen4zfEfODiVqDaOc7XAJt3rcprX+tLC0EvGNAKaTzdmpqTXqKBDWmKlHIEqvW7bFQedB+N/tozhKSakALi2ggpWBL7LerRXcArHxOyWi0fTY58a2W1Grj+SYkkJajosXiTDSFOh8ZAbG6v8ru63zmgHk4Pnfps7kU3LzgKy43gD4+mwqLZ9q1YdNWB1s+ZCYNyN2Ht/mrH7wNHI2JIGiI1uSJ/CZy1EB46mTbT8J7QKBgQC+ukLgZ+5E6lRV6HISUJF4x7PzutyrnTBG7cqMehQiq37mIjRqyG5xlJl57sbAPWPoMa2XlKeFreM5hzV7yVUGvQwtQK0Y9bpbcOJ/a4K4VNTseecjobJN2T5LiIQnfcWg08McMEiAoUZbIXhJ9qQ9qyXa4VqhPtC5a310qS69tQKBgQC84yRzQgVBl9aqOxe5SpVdoJtixgfPtDi8oaWQ9tmBbZVBLWXlv1ozDzadbRIYClqa7VZ4kcAfsAchDWyrymlS3s9WLjOu/djrNp5phqOpisZM1KJ13Q0RZTJCBZctWlxg6zg+FaeAsmeb8/Vk7/0O7AaS3ab+JOJIDeHAUWdMnwKBgCkuwNgBuQIqcvFl0pO/z9l7jZC4LYPk2hLGr7Crf4OI8kqw4g6YnrhptMYOV94Uo2j0qR4M3CtSQ7kdR+AltfVRhrqSt42nKYkrE80dosk4kA1LuSwJcx26JehbXuXEE5NJhlyk1FLp/+4XiQi3d/lU5kSf2ljs3lbbLeity0jtAoGAC/mupuwJn0X8IyDJ+UJkQ+JZ16JMfnujmTn6YD12PsFu1AoHytAd7NzLDqIKoqGNawMfF1fOQXQMj6jlOeMEWG+t333gYvjPFuKImpIhsC8PMXHNtwFDwdWToSHvmr1+29ot36nJy9wDu5x082hPt/F43TjWTIiUHBNdO68tiGsCgYEAhkewXJwzoBfo3N65AF+gJ8b7VrgttbzI9RmNSKUZp5BfctQODthmEaWoft+W+Pw75AlrL8Ab7hbzhWMGoForEe5RQdoJEL95FoZFOhNJcHqsBltLkeAh0hqYQkblWMxc8uzgGQR/8fA5SE4xekpeow4A3uOlL+9Y/S3OhQRXsQ0='; // Use the actual Base64 string of the private key
+let privateKeyBinaryString = atob(privateKeyBase64);
+let privateKeyArrayBuffer = Uint8Array.from(privateKeyBinaryString, c => c.charCodeAt(0)).buffer;
+
+crypto.subtle.importKey(
+    'pkcs8',
+    privateKeyArrayBuffer,
+    {
+        name: "RSA-OAEP",
+        hash: {name: "SHA-256"},
+    },
+    true,
+    ["decrypt"]
+)
+.then(privateKey => {
+    let encryptedBase64 = '...'; // The encrypted Base64 string
+    let encryptedBinaryString = atob(encryptedBase64);
+    let encryptedArrayBuffer = Uint8Array.from(encryptedBinaryString, c => c.charCodeAt(0)).buffer;
+
+    crypto.subtle.decrypt(
+        {
+            name: "RSA-OAEP",
+        },
+        privateKey,
+        encryptedArrayBuffer
+    )
+    .then(decrypted => {
+        // Convert the decrypted ArrayBuffer to text
+        let decryptedText = new TextDecoder().decode(decrypted);
+        document.getElementById("demo2").innerHTML = decryptedText;
+    })
+    .catch(error => console.error('Decryption error:', error));
+})
+.catch(error => console.error('Private key import error:', error));
+};
 </script>
 </body>
 
