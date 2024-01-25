@@ -110,7 +110,7 @@ document.getElementById("demo").innerHTML = decryptedText;
   
 }
 
-const element = document.getElementById("myBtn2");
+const element2 = document.getElementById("myBtn2");
 element.addEventListener("click", myFunction2);
 
 function myFunction2() {
@@ -129,7 +129,8 @@ crypto.subtle.importKey(
     ["decrypt"]
 )
 .then(privateKey => {
-    let encryptedBase64 = '...'; // The encrypted Base64 string
+var enc_value2  = document.getElementById("encrypt2").value;
+    let encryptedBase64 = enc_value2.toString(); // The encrypted Base64 string
     let encryptedBinaryString = atob(encryptedBase64);
     let encryptedArrayBuffer = Uint8Array.from(encryptedBinaryString, c => c.charCodeAt(0)).buffer;
 
