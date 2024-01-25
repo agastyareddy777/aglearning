@@ -144,6 +144,7 @@ var enc_value2  = document.getElementById("encrypt2").value;
     .then(decrypted => {
         // Convert the decrypted ArrayBuffer to text
         let decryptedText = new TextDecoder().decode(decrypted);
+        console.log('Decrypted:2', decryptedText);
         document.getElementById("demo2").innerHTML = decryptedText;
     })
     .catch(error => console.error('Decryption error:', error));
