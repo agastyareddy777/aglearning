@@ -129,8 +129,7 @@ crypto.subtle.importKey(
     ["decrypt"]
 )
 .then(privateKey => {
-var enc_value2  = document.getElementById("encrypt2").value;
-    let encryptedBase64 = enc_value2.toString(); // The encrypted Base64 string
+    let encryptedBase64 = document.getElementById('encrypt2').value;
     let encryptedBinaryString = atob(encryptedBase64);
     let encryptedArrayBuffer = Uint8Array.from(encryptedBinaryString, c => c.charCodeAt(0)).buffer;
 
@@ -144,8 +143,8 @@ var enc_value2  = document.getElementById("encrypt2").value;
     .then(decrypted => {
         // Convert the decrypted ArrayBuffer to text
         let decryptedText = new TextDecoder().decode(decrypted);
-        console.log('Decrypted:2', decryptedText);
-        document.getElementById("demo2").innerHTML = decryptedText;
+        console.log('Decrypted:', decryptedText);
+        document.getElementById('demo2').innerHTML = decryptedText; 
     })
     .catch(error => console.error('Decryption error:', error));
 })
