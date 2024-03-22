@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Step Form</title>
+<style>
+  .form-step {
+    display: none;
+  }
+  .form-step.active {
+    display: block;
+  }
+</style>
+</head>
+<body>
+  <form id="multi-step-form" action="#" method="POST">
+    <div class="form-step active" id="step-1">
+      <h2>Step 1: Personal Information</h2>
+      <label for="client_id">Client ID:</label>
+      <input type="text" id="client_id" name="client_id">
+      <br>
+      <label for="org_id">Org ID:</label>
+      <input type="text" id="org_id" name="org_id">
+      <br>
+      <label for="aceess_token">Access Token:</label>
+      <input type="access_token" id="access_token" name="access_token">
+      <br>
+      <button onclick="stepOne()">Next</button>
+    </div>
+    <div class="form-step" id="step-2">
+      <h2>Step 2: Address Information</h2>
+      <label for="address">Address:</label>
+      <input type="text" id="address" name="address">
+      <br>
+      <label for="city">City:</label>
+      <input type="text" id="city" name="city">
+      <br>
+      <button onclick="prevStep()">Previous</button>
+      <button onclick="nextStep()">Next</button>
+    </div>
+    <div class="form-step" id="step-3">
+      <h2>Step 3: Additional Information</h2>
+      <label for="phone">Phone:</label>
+      <input type="tel" id="phone" name="phone">
+      <br>
+      <button onclick="prevStep()">Previous</button>
+      <button type="submit">Submit</button>
+    </div>
+  </form>
+
+  <script>
+    let currentStep = 1;
+    window.digitalData = window.digitalData || [];
+    function fetchDataWithHeaders(url, headers) {
+    fetch(url, {
+        method: 'GET',
+        headers: headers
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Do something with the data
+        console.log(data);
+    })
+    .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+    });
+}
+let customHeaders = {};
+function stepOne() {
+        const client_id = document.getElementById("client_id").value;
+        const org_id = document.getElementById("org_id").value;
+        const access_token = "Baerer "+document.getElementById("access_token").value;
+        const apiUrl = 'https://reactor.adobe.io/companies';
+        customHeaders = {
+            'Authorization': access_token,
+            'x-api-key': client_id,
+            'x-gw-ims-org-id': access_token,
+            'Content-Type': 'application/vnd.api+json',
+            'Accept': 'application/vnd.api+json;revision=1'
+        };
+        digitalData.push(fetchDataWithHeaders(apiUrl, customHeaders));
+        document.getElementById(`step-1`).classList.remove('active');
+        document.getElementById(`step-2`).classList.add('active');
+    }
+    function nextStep() {
+      document.getElementById(`step-${currentStep}`).classList.remove('active');
+      currentStep++;
+      document.getElementById(`step-${currentStep}`).classList.add('active');
+    }
+
+    function prevStep() {
+      document.getElementById(`step-${currentStep}`).classList.remove('active');
+      currentStep--;
+      document.getElementById(`step-${currentStep}`).classList.add('active');
+    }
+  </script>
+</body>
+</html>
