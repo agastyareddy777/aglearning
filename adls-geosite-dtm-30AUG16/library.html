@@ -5,99 +5,646 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multi-Step Form</title>
 <style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f2f2f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .container {
+    max-width: 600px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
   .form-step {
     display: none;
   }
+
   .form-step.active {
     display: block;
   }
+
+  h2 {
+    margin-top: 0;
+    color: #333;
+  }
+
+  label {
+    font-weight: bold;
+    color: #666;
+  }
+
+  input[type="text"],
+  input[type="access_token"] {
+    width: calc(100% - 40px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
+  .reload-button {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    margin-left: -40px;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .reload-button:hover {
+    background-color: #ddd;
+  }
+
+  button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  p {
+    color: #666;
+  }
+
 </style>
 </head>
 <body>
+  <div class="container">
+    <div style="display: none;" id="error-message">
+      <h2>Error</h2>
+      <br>
+      <p id="error-message-display"></p>
+      <br>
+    </div>
     <div class="form-step active" id="step-1">
-      <h2>Step 1: Personal Information</h2>
+      <h2>Provide Developer Details</h2>
       <label for="client_id">Client ID:</label>
       <input type="text" id="client_id" name="client_id">
+      <span class="reload-button" onclick="reloadInput('client_id')">↺</span>
       <br>
       <label for="org_id">Org ID:</label>
       <input type="text" id="org_id" name="org_id">
+      <span class="reload-button" onclick="reloadInput('org_id')">↺</span>
       <br>
-      <label for="aceess_token">Access Token:</label>
-      <input type="access_token" id="access_token" name="access_token">
+      <label for="access_token">Access Token:</label>
+      <input type="text" id="access_token" name="access_token">
+      <span class="reload-button" onclick="reloadInput('access_token')">↺</span>
       <br>
       <button onclick="stepOne()">Next</button>
     </div>
     <div class="form-step" id="step-2">
-      <h2>Step 2: Address Information</h2>
-      <label for="address">Address:</label>
-      <input type="text" id="address" name="address">
+      <h2>Step 2: Select the Company</h2>
+      <p id="sandbox-details"></p>
       <br>
-      <label for="city">City:</label>
-      <input type="text" id="city" name="city">
-      <br>
-      <button onclick="prevStep()">Previous</button>
-      <button onclick="nextStep()">Next</button>
+      <button onclick="prevStep('1','2')">Previous</button>
+      <button onclick="stepTwo()">Next</button>
     </div>
     <div class="form-step" id="step-3">
-      <h2>Step 3: Additional Information</h2>
-      <label for="phone">Phone:</label>
-      <input type="tel" id="phone" name="phone">
+      <h2>Step 3: Select the Property</h2>
+      <p id="property-details"></p>
       <br>
-      <button onclick="prevStep()">Previous</button>
-      <button type="submit">Submit</button>
+      <button onclick="prevStep('2','3')">Previous</button>
+      <button onclick="stepThree()">Next</button>
     </div>
+    <div class="form-step" id="step-4">
+      <h2>Step 4: Select the Library to Merge</h2>
+      <p id="library-details"></p>
+      <br>
+      <button onclick="prevStep('3','4')">Previous</button>
+      <button onclick="stepFour()">Next</button>
+    </div>
+    <div class="form-step" id="step-5">
+      <h2>Step 5: Input the Library Name</h2>
+      <label for="library_name">Library Name:</label>
+      <input type="text" id="library_name" name="library_name">
+      <br>
+      <button onclick="stepFive()">Create New Library</button>
+    </div>
+    <div class="form-step" id="step-6">
+      <h2>Step 6: Success Message Display</h2>
+      <p>Created new library</p>
+      <br>
+    </div>
+  </div>
+      <script>
+         let currentStep = 1;
+         window.digitalData = window.digitalData || {};
+         function fetchDataWithHeaders(url, headers, name) {
+         fetch(url, {
+             method: 'GET',
+             headers: headers
+         })
+         .then(response => {
+             if (!response.ok) {
+                 throw new Error('Network response was not ok');
+                 document.getElementById("error-message-display").innerHTML = "Network response was not ok";
+                 document.getElementById("error-message").style.display ="block";
+             }
+               return response.json()
+         })
+         .then(data => {
+             // Do something with the data
+             console.log(data);
+             if(name.indexOf('ext-') > -1){
+              digitalData['processdata'] = digitalData['processdata'] || [];
+              digitalData['processdata'].push(data);
+              digitalData[name] = data;
+             }
+             else if(name.indexOf('rule-') > -1){
+              digitalData['processdata'] = digitalData['processdata'] || [];
+              digitalData['processdata'].push(data);
+              digitalData[name] = data;
+             }
+             else if(name.indexOf('de-') > -1){
+              digitalData['processdata'] = digitalData['processdata'] || [];
+              digitalData['processdata'].push(data);
+              digitalData[name] = data;
+             }
+             else{
+             digitalData[name] = data;
+            }
 
-  <script>
-    let currentStep = 1;
-    window.digitalData = window.digitalData || [];
-    function fetchDataWithHeaders(url, headers) {
-    fetch(url, {
-        method: 'GET',
-        headers: headers
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+         })
+         .catch(error => {
+             console.error('There was a problem with the fetch operation:', error);
+             document.getElementById("error-message-display").innerHTML = error;
+             document.getElementById("error-message").style.display ="block";
+         });
+         }
+         //// post 
+         function fetchPostDataWithHeaders(url, headers, name , body) {
+         fetch(url, {
+             method: 'POST',
+             headers: headers,
+             body : JSON.stringify(body)
+         })
+         .then(response => {
+             if (!response.ok) {
+                 throw new Error('Network response was not ok');
+                 document.getElementById("error-message-display").innerHTML = "Network response was not ok";
+                 document.getElementById("error-message").style.display ="block";
+             }
+               return response.json()
+         })
+         .then(data => {
+             // Do something with the data
+             console.log(data);
+             if(name.indexOf('ext-') > -1){
+              digitalData['processdata'] = digitalData['processdata'] || [];
+              digitalData['processdata'].push(data);
+              digitalData[name] = data;
+             }
+             else if(name.indexOf('rule-') > -1){
+              digitalData['processdata'] = digitalData['processdata'] || [];
+              digitalData['processdata'].push(data);
+              digitalData[name] = data;
+             }
+             else if(name.indexOf('de-') > -1){
+              digitalData['processdata'] = digitalData['processdata'] || [];
+              digitalData['processdata'].push(data);
+              digitalData[name] = data;
+             }
+             else{
+             digitalData[name] = data;
+            }
+
+         })
+         .catch(error => {
+             console.error('There was a problem with the fetch operation:', error);
+             document.getElementById("error-message-display").innerHTML = error;
+             document.getElementById("error-message").style.display ="block";
+         });
+         }
+         ////
+         let customHeaders = {};
+         function reloadInput(value){
+          function getCookie(cookieName) {
+            var cookies = document.cookie.split(';');
+         for (var i = 0; i < cookies.length; i++) {
+             var cookie = cookies[i].trim();
+             // Check if the cookie starts with the provided name
+             if (cookie.startsWith(cookieName + '=')) {
+                 // Return the cookie value
+                 return cookie.substring(cookieName.length + 1);
+             }
+         }
+         // If cookie with the provided name is not found, return null
+         return null;
+         }
+         
+         // Example usage
+         var cookieVal = getCookie(value);
+         console.log(cookieVal);
+         document.getElementById(value).value = cookieVal;
+         }
+         function stepOne() {
+          digitalData['companyDetails'] = {}
+          document.getElementById("error-message").style.display ="none";
+         const d = new Date();
+             d.setTime(d.getTime() + (30*24*60*60*1000));
+             let expires = "expires="+ d.toUTCString();
+             const client_id = document.getElementById("client_id").value;
+             document.cookie = 'client_id='+client_id+";"+ expires + ";path=/";
+             const org_id = document.getElementById("org_id").value;
+             document.cookie = 'org_id='+org_id+";"+ expires + ";path=/";
+             const access_token = "Bearer "+document.getElementById("access_token").value;
+             access_tokenVal = document.getElementById("access_token").value;
+             document.cookie = 'access_token='+access_tokenVal+";"+ expires + ";path=/";
+             let name = "companyDetails";
+             const apiUrl = 'https://reactor.adobe.io/companies';
+             customHeaders = {
+                 'Authorization': access_token,
+                 'x-api-key': client_id,
+                 'x-gw-ims-org-id': org_id,
+                 'Content-Type': 'application/vnd.api+json',
+                 'Accept': 'application/vnd.api+json;revision=1'
+             };
+             customHeadersStringVal = JSON.stringify(customHeaders);
+             var status = fetchDataWithHeaders(apiUrl, customHeaders, name);
+             function displayCompany(){
+                 if(digitalData.companyDetails && digitalData.companyDetails.data && digitalData.companyDetails.data.length > 0 ){
+                     var sandboxDetails = digitalData.companyDetails.data;
+                     var sandbox_details = document.getElementById("sandbox-details");
+                     document.getElementById("sandbox-details").innerHTML = "";
+                     for(i=0;i<sandboxDetails.length;i++){
+                         var input = document.createElement('input');
+                         input.type = 'radio';
+                         input.name = 'sandbox'
+                         input.value = sandboxDetails[i].id;
+                         input.id = sandboxDetails[i].id;
+                         var label = document.createElement('label');
+                         label.for = sandboxDetails[i].id;
+                         label.innerHTML = sandboxDetails[i].attributes.name;
+                         var br = document.createElement('br');
+                         sandbox_details.appendChild(input);
+                         sandbox_details.appendChild(label);
+                         sandbox_details.appendChild(br);
+                     }
+                     document.getElementById(`step-1`).classList.remove('active');
+                     document.getElementById(`step-2`).classList.add('active');
+                     clearTimeout(steponeTimeout);
+             }
+             }
+             const steponeTimeout = setTimeout(displayCompany, 2000);
+             
+         }
+         function stepTwo() {
+          digitalData['propertyDetails'] = {};
+          document.getElementById("error-message").style.display ="none";
+             const sandbox_id = document.querySelector('input[name="sandbox"]:checked').value;
+             let name = "propertyDetails";
+             const apiUrl = 'https://reactor.adobe.io/companies/'+sandbox_id+'/properties';
+             var status = fetchDataWithHeaders(apiUrl, customHeaders, name);
+             function displayProperty(){
+                 if(digitalData.propertyDetails && digitalData.propertyDetails.data && digitalData.propertyDetails.data.length > 0 ){
+                     var propertyDetails = digitalData.propertyDetails.data;
+                     var property_details = document.getElementById("property-details");
+                     document.getElementById("property-details").innerHTML = "";
+                     for(i=0;i<propertyDetails.length;i++){
+                         var input = document.createElement('input');
+                         input.type = 'radio';
+                         input.name = 'property'
+                         input.value = propertyDetails[i].id;
+                         input.id = propertyDetails[i].id;
+                         var label = document.createElement('label');
+                         label.for = propertyDetails[i].id;
+                         label.innerHTML = propertyDetails[i].attributes.name;
+                         var br = document.createElement('br');
+                         property_details.appendChild(input);
+                         property_details.appendChild(label);
+                         property_details.appendChild(br);
+                     }
+                     document.getElementById(`step-2`).classList.remove('active');
+                     document.getElementById(`step-3`).classList.add('active');
+                     clearTimeout(steptwoTimeout);
+             }
+             }
+             const steptwoTimeout = setTimeout(displayProperty, 2000);
+         }
+         function stepThree() {
+          digitalData['environmentDetails'] = {};
+          digitalData['libraryDetails'] = {};
+          console.log(digitalData)
+          document.getElementById("error-message").style.display ="none";
+             const property_id = document.querySelector('input[name="property"]:checked').value;
+             digitalData['propertyID'] = property_id;
+             let name1 = "environmentDetails";
+             const apiUrl1 = 'https://reactor.adobe.io/properties/'+property_id+'/environments';
+             var status = fetchDataWithHeaders(apiUrl1, customHeaders, name1);
+             function getEnvironmentDetails(){
+              if(digitalData.environmentDetails && digitalData.environmentDetails.data && digitalData.environmentDetails.data.length > 0){
+                var envDetails = digitalData.environmentDetails.data;
+                for(i=0;i<envDetails.length;i++){
+                  digitalData[envDetails[i].id] = {'name': envDetails[i].attributes.name,'stage': envDetails[i].attributes.stage}
+                }
+                let name = "libraryDetails";
+             const apiUrl = 'https://reactor.adobe.io/properties/'+property_id+'/libraries';
+             var status = fetchDataWithHeaders(apiUrl, customHeaders, name);
+             function displayLibrary(){
+                 if(digitalData.libraryDetails && digitalData.libraryDetails.data && digitalData.libraryDetails.data.length > 0 ){
+                     var libraryDetails = digitalData.libraryDetails.data;
+                     var library_details = document.getElementById("library-details");
+                     document.getElementById("library-details").innerHTML = "";
+                     for(i=0;i<libraryDetails.length;i++){
+                         if(libraryDetails[i].attributes.state == "development"){
+                          var environment = libraryDetails[i].relationships.environment;
+                          if(environment.data == null){
+                            devenvironment = "no environment"
+                          }
+                          else{
+                            environmentid = environment.data.id;
+                            devenvironment = digitalData[environmentid].name
+                          }
+                         var input = document.createElement('input');
+                         input.type = 'checkbox';
+                         input.name = 'library'
+                         input.value = libraryDetails[i].id;
+                         input.id = libraryDetails[i].id;
+                         var label = document.createElement('label');
+                         label.for = libraryDetails[i].id;
+                         label.innerHTML = libraryDetails[i].attributes.name+"["+devenvironment+"]";
+                         var br = document.createElement('br');
+                         library_details.appendChild(input);
+                         library_details.appendChild(label);
+                         library_details.appendChild(br);
+                         }
+                         else if(libraryDetails[i].attributes.state == "submitted"){
+                          stageups_id = libraryDetails[i].relationships.upstream_library.data.id;
+                          const stageupsextapiUrl = 'https://reactor.adobe.io/libraries/'+stageups_id+'/extensions';
+                          const stageupsruleapiUrl = 'https://reactor.adobe.io/libraries/'+stageups_id+'/rules';
+                          const stageupsdeapiUrl = 'https://reactor.adobe.io/libraries/'+stageups_id+'/data_elements';
+                          var stageupsext = fetchDataWithHeaders(stageupsextapiUrl, customHeaders, 'stageups-ext');
+                          var stageupsrule = fetchDataWithHeaders(stageupsruleapiUrl, customHeaders, 'stageups-rule');
+                          var stageupsde = fetchDataWithHeaders(stageupsdeapiUrl, customHeaders, 'stageups-de');
+                          function stageups(){
+                            if(digitalData['stageups-de'] && digitalData['stageups-rule'] && digitalData['stageups-ext']){
+                              clearTimeout(stepstageupsTimeout);
+                              digitalData['stageups'] = {};
+                              var stageups_ext =  digitalData['stageups-ext'].data
+                              for(p=0;p<stageups_ext.length;p++){
+                                stageups_ext_pid = stageups_ext[p].links.origin;
+                                stageups_ext_pid = stageups_ext_pid.split('extensions/')
+                                digitalData['stageups'][stageups_ext_pid[1]] = {'id':stageups_ext[p].id,'revision':stageups_ext[p].attributes.revision_number}
+                              }
+                              var stageups_rule =  digitalData['stageups-rule'].data
+                              for(p=0;p<stageups_rule.length;p++){
+                                stageups_rule_pid = stageups_rule[p].links.origin;
+                                stageups_rule_pid = stageups_rule_pid.split('rules/')
+                                digitalData['stageups'][stageups_rule_pid[1]] = {'id':stageups_rule[p].id,'revision':stageups_rule[p].attributes.revision_number}
+                              }
+                              var stageups_de =  digitalData['stageups-de'].data
+                              for(p=0;p<stageups_de.length;p++){
+                                stageups_de_pid = stageups_de[p].links.origin;
+                                stageups_de_pid = stageups_de_pid.split('data_elements/')
+                                digitalData['stageups'][stageups_de_pid[1]] = {'id':stageups_de[p].id,'revision':stageups_de[p].attributes.revision_number}
+                              }
+                            }
+                            
+                          }
+                          const stepstageupsTimeout = setTimeout(stageups, 2000);
+                         }
+                     }
+                     document.getElementById(`step-3`).classList.remove('active');
+                     document.getElementById(`step-4`).classList.add('active');
+                     clearTimeout(stepthreeTimeout);
+             }
+             }
+             const stepthreeTimeout = setTimeout(displayLibrary, 2000);
+                clearTimeout(stepenvTimeout);
+              }
+             }
+            const stepenvTimeout = setTimeout(getEnvironmentDetails, 2000);
+             ///
+             
+             ////
+             
+         }
+         function stepFour() {
+          document.getElementById("error-message").style.display ="none";
+             const library_list = document.querySelectorAll('input[name="library"]:checked');
+             digitalData['selectedlibrary'] = [];
+             const upsapiUrl = 'https://reactor.adobe.io/libraries/'+library_list[0].value+'/upstream_library'
+             var ups = fetchDataWithHeaders(upsapiUrl, customHeaders, 'ups');
+             function upstreamData(){
+              if(digitalData.ups && digitalData.ups.data && digitalData.ups.data.id){
+                ups_id = digitalData.ups.data.id;
+                const upsextapiUrl = 'https://reactor.adobe.io/libraries/'+ups_id+'/extensions';
+                const upsruleapiUrl = 'https://reactor.adobe.io/libraries/'+ups_id+'/rules';
+                const upsdeapiUrl = 'https://reactor.adobe.io/libraries/'+ups_id+'/data_elements';
+                var upsext = fetchDataWithHeaders(upsextapiUrl, customHeaders, 'ups-ext');
+                var upsrule = fetchDataWithHeaders(upsruleapiUrl, customHeaders, 'ups-rule');
+                var upsde = fetchDataWithHeaders(upsdeapiUrl, customHeaders, 'ups-de');
+                clearTimeout(stepupsTimeout);
+                function processData(){
+              if(digitalData['ups-ext'] && digitalData['ups-rule'] && digitalData['ups-de']){
+                clearTimeout(stepprocessTimeout);
+                digitalData['devups'] = {};
+                var ups_ext =  digitalData['ups-ext'].data
+                              for(p=0;p<ups_ext.length;p++){
+                                ups_ext_pid = ups_ext[p].links.origin;
+                                ups_ext_pid = ups_ext_pid.split('extensions/')
+                                digitalData['devups'][ups_ext_pid[1]] = {'id':ups_ext[p].id,'revision':ups_ext[p].attributes.revision_number}
+                              }
+                              var ups_rule =  digitalData['ups-rule'].data
+                              for(p=0;p<ups_rule.length;p++){
+                                ups_rule_pid = ups_rule[p].links.origin;
+                                ups_rule_pid = ups_rule_pid.split('rules/')
+                                digitalData['devups'][ups_rule_pid[1]] = {'id':ups_rule[p].id,'revision':ups_rule[p].attributes.revision_number}
+                              }
+                              var ups_de =  digitalData['ups-de'].data
+                              for(p=0;p<ups_de.length;p++){
+                                ups_de_pid = ups_de[p].links.origin;
+                                ups_de_pid = ups_de_pid.split('data_elements/')
+                                digitalData['devups'][ups_de_pid[1]] = {'id':ups_de[p].id,'revision':ups_de[p].attributes.revision_number}
+                              }
+             for(i=0;i<library_list.length;i++){
+              library_id = library_list[i].value;
+              digitalData['selectedlibrary'].push(library_list[i].value);
+              const extapiUrl = 'https://reactor.adobe.io/libraries/'+library_id+'/extensions';
+              const ruleapiUrl = 'https://reactor.adobe.io/libraries/'+library_id+'/rules';
+              const deapiUrl = 'https://reactor.adobe.io/libraries/'+library_id+'/data_elements';
+              var ext = fetchDataWithHeaders(extapiUrl, customHeaders, 'ext-'+library_id);
+              var rule = fetchDataWithHeaders(ruleapiUrl, customHeaders, 'rule-'+library_id);
+              var de = fetchDataWithHeaders(deapiUrl, customHeaders, 'de-'+library_id); 
+             }
+             //upstream sort
+             for(k=0;k<digitalData['ups-ext'].data.length ;k++){
+             }
+             //
+             function newData(){
+                if(digitalData.processdata && digitalData.processdata.length == (library_list.length*3)){
+                  clearTimeout(stepfilterTimeout)
+                  for(i=0;i<library_list.length;i++){
+                    library_id = library_list[i].value;
+                    var extension_list = digitalData['ext-'+library_id].data;
+                    for(j=0;j<extension_list.length;j++){
+                      extension_data = extension_list[j].links.origin;
+                      extension_pid = extension_data.split('extensions/');
+                      extension_uid = extension_pid[1];
+                      digitalData['newlibrary'] = digitalData['newlibrary'] || {};
+                      digitalData['newlibrary']['extensions'] = digitalData['newlibrary']['extensions'] || {};
+                      if(digitalData['newlibrary']['extensions'][extension_uid] && digitalData['newlibrary']['extensions'][extension_uid].revision >= extension_list[j]['attributes']['revision_number']){
+
+                      }
+                      else{
+                        digitalData['newlibrary']['extensions'][extension_uid] = {'id':extension_list[j].id,'revision':extension_list[j]['attributes']['revision_number']}
+                      }
+                    }
+                    var rules_list = digitalData['rule-'+library_id].data;
+                    for(j=0;j<rules_list.length;j++){
+                      rule_data = rules_list[j].links.origin;
+                      rule_pid = rule_data.split('rules/');
+                      rule_uid = rule_pid[1];
+                      digitalData['newlibrary'] = digitalData['newlibrary'] || {};
+                      digitalData['newlibrary']['rules'] = digitalData['newlibrary']['rules'] || {};
+
+                      if(digitalData['newlibrary']['rules'][rule_uid] && digitalData['newlibrary']['rules'][rule_uid].revision >= rules_list[j]['attributes']['revision_number']){
+
+                      }
+                      else{
+                        digitalData['newlibrary']['rules'][rule_uid] = {'id':rules_list[j].id , 'revision': rules_list[j]['attributes']['revision_number']}
+                      }
+                    }
+                    var de_list = digitalData['de-'+library_id].data;
+                    for(j=0;j<de_list.length;j++){
+                      de_data = de_list[j].links.origin;
+                      de_pid = de_data.split('data_elements/');
+                      de_uid = de_pid[1];
+                      digitalData['newlibrary'] = digitalData['newlibrary'] || {};
+                      digitalData['newlibrary']['de'] = digitalData['newlibrary']['de'] || {};
+                      if(digitalData['newlibrary']['de'][de_uid] && digitalData['newlibrary']['de'][de_uid].revision >= de_list[j]['attributes']['revision_number']){
+
+                      }
+                      else{
+                        digitalData['newlibrary']['de'][de_uid] = {'id': de_list[j].id,'revision':de_list[j]['attributes']['revision_number']}
+                      }
+                    }
+                  }
+                  /////
+                  final_de_list = [];
+                  if(digitalData['newlibrary']['de']){
+                    let de_obj = digitalData['newlibrary']['de'];
+                    for (var key in de_obj) {
+                      if (de_obj.hasOwnProperty(key)) {
+                        if((digitalData.stageups[key] && digitalData.stageups[key].revision >= de_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= de_obj[key].revision)){
+                        }
+                        else{
+                          final_de_list.push({'id':de_obj[key].id,'type':'data_elements'})
+                        }
+                      }
+                    }
+                  }
+                  //
+                  final_rule_list = [];
+                  if(digitalData['newlibrary']['rules']){
+                    let rule_obj = digitalData['newlibrary']['rules'];
+                    for (var key in rule_obj) {
+                      if (rule_obj.hasOwnProperty(key)) {
+                        if((digitalData.stageups[key] && digitalData.stageups[key].revision >= rule_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= rule_obj[key].revision)){
+                        }
+                        else{
+                          final_rule_list.push({'id':rule_obj[key].id,'type':'rules'})
+                        }
+                      }
+                    }
+                  }
+                  ///
+                  final_ext_list = [];
+                  if(digitalData['newlibrary']['extensions']){
+                    let ext_obj = digitalData['newlibrary']['extensions'];
+                    for (var key in ext_obj) {
+                      if (ext_obj.hasOwnProperty(key)) {
+                        if((digitalData.stageups[key] && digitalData.stageups[key].revision >= ext_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= ext_obj[key].revision)){
+                        }
+                        else{
+                          final_ext_list.push({'id':ext_obj[key].id,'type':'extensions'})
+                        }
+                      }
+                    }
+                  }
+                  ////
+                  document.getElementById(`step-4`).classList.remove('active');
+                  document.getElementById(`step-5`).classList.add('active');
+                }
+              }
+              const stepfilterTimeout = setTimeout(newData, 2000);
+            }
+            }
+                const stepprocessTimeout = setTimeout(processData, 2000);
+              }
+             }
+             const stepupsTimeout = setTimeout(upstreamData, 2000);
+             
+             ////
+         }
+         function stepFive(){
+          library_name = document.getElementById('library_name').value;
+          newlibraryapiURL = 'https://reactor.adobe.io/properties/'+digitalData['propertyID']+'/libraries'
+          data1 = { "data": {
+            "attributes": {
+            "name": library_name
+          },
+          "type": "libraries"
         }
-        return response.json();
-    })
-    .then(data => {
-        // Do something with the data
-        console.log(data);
-      digitalData.push(data["data"]);
-    })
-    .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
-    });
-}
-let customHeaders = {};
-function stepOne() {
-        const client_id = document.getElementById("client_id").value;
-        const org_id = document.getElementById("org_id").value;
-        const access_token = "Bearer "+document.getElementById("access_token").value;
-        const apiUrl = 'https://reactor.adobe.io/companies';
-        customHeaders = {
-            'Authorization': access_token,
-            'x-api-key': client_id,
-            'x-gw-ims-org-id': org_id,
-            'Content-Type': 'application/vnd.api+json',
-            'Accept': 'application/vnd.api+json;revision=1'
-        };
-        digitalData.push(fetchDataWithHeaders(apiUrl, customHeaders));
-        document.getElementById(`step-1`).classList.remove('active');
-        document.getElementById(`step-2`).classList.add('active');
-    }
-    function nextStep() {
-      document.getElementById(`step-${currentStep}`).classList.remove('active');
-      currentStep++;
-      document.getElementById(`step-${currentStep}`).classList.add('active');
-    }
-
-    function prevStep() {
-      document.getElementById(`step-${currentStep}`).classList.remove('active');
-      currentStep--;
-      document.getElementById(`step-${currentStep}`).classList.add('active');
-    }
-  </script>
-</body>
+      }
+          var new_library = fetchPostDataWithHeaders(newlibraryapiURL, customHeaders, "newlibraryid", data1);
+          function createLibrary(){
+            if(digitalData.newlibraryid && digitalData.newlibraryid.data){
+              function successMessage(){
+              if(digitalData['new_ext'] && digitalData['new_de'] && digitalData['new_rule']){
+                document.getElementById(`step-5`).classList.remove('active');
+                document.getElementById(`step-6`).classList.add('active');
+                clearTimeout(finalstepTimeout1)
+              }
+            }
+              new_library_id = digitalData.newlibraryid.data.id;
+              new_ext_apiUrl = 'https://reactor.adobe.io/libraries/'+new_library_id+'/relationships/extensions'
+              new_rule_apiUrl = 'https://reactor.adobe.io/libraries/'+new_library_id+'/relationships/rules'
+              new_de_apiUrl = 'https://reactor.adobe.io/libraries/'+new_library_id+'/relationships/data_elements'
+              data_ext = {"data": final_ext_list}
+              data_de = {"data": final_de_list}
+              data_rule = {"data": final_rule_list}
+              if(final_ext_list.length > 0 ){
+                var new_library_ext = fetchPostDataWithHeaders(new_ext_apiUrl, customHeaders, "new_ext", data_ext);
+              }
+              else{digitalData['new_ext'] = {}}
+              if(final_de_list.length > 0){
+                var new_library_de = fetchPostDataWithHeaders(new_de_apiUrl, customHeaders, "new_de", data_de);
+              }else{digitalData['new_de'] = {}}
+              if(final_rule_list.length >0){
+                var new_library_rule = fetchPostDataWithHeaders(new_rule_apiUrl, customHeaders, "new_rule", data_rule);
+              }else{digitalData['new_rule'] = {}}
+              
+              clearTimeout(stepnewlibcreatTimeout)
+            const finalstepTimeout1 = setTimeout(successMessage, 2000);
+            }
+          }
+          const stepnewlibcreatTimeout = setTimeout(createLibrary, 2000);
+         }
+         function prevStep(n,p) {
+           document.getElementById(`step-`+p).classList.remove('active');
+           document.getElementById(`step-`+n).classList.add('active');
+         }
+      </script>
+   </body>
 </html>
