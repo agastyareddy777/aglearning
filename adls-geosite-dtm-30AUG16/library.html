@@ -85,7 +85,18 @@
   p {
     color: #666;
   }
-
+  table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
 </style>
 </head>
 <body>
@@ -127,11 +138,29 @@
       <button onclick="stepThree()">Next</button>
     </div>
     <div class="form-step" id="step-4">
-      <h2>Step 4: Select the Library to Merge</h2>
+      <h2>Step 4.1: Select the Library to Merge</h2>
       <p id="library-details"></p>
       <br>
       <button onclick="prevStep('3','4')">Previous</button>
       <button onclick="stepFour()">Next</button>
+    </div>
+    <div class="form-step" id="step-42">
+      <h2>Step 4.2: Confirm the final list</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Revision</th>
+            <th>Checkbox</th>
+          </tr>
+        </thead>
+        <tbody id="pre-finallist-tbody">
+        </tbody>
+      </table>
+      <br>
+      <button onclick="prevStep('4','42')">Previous</button>
+      <button onclick="stepFourtwo()">Next</button>
     </div>
     <div class="form-step" id="step-5">
       <h2>Step 5: Input the Library Name</h2>
@@ -507,7 +536,7 @@
 
                       }
                       else{
-                        digitalData['newlibrary']['extensions'][extension_uid] = {'id':extension_list[j].id,'revision':extension_list[j]['attributes']['revision_number']}
+                        digitalData['newlibrary']['extensions'][extension_uid] = {'id':extension_list[j].id,'name': extension_list[j]['attributes']['name'],'revision':extension_list[j]['attributes']['revision_number']}
                       }
                     }
                     var rules_list = digitalData['rule-'+library_id].data;
@@ -522,7 +551,7 @@
 
                       }
                       else{
-                        digitalData['newlibrary']['rules'][rule_uid] = {'id':rules_list[j].id , 'revision': rules_list[j]['attributes']['revision_number']}
+                        digitalData['newlibrary']['rules'][rule_uid] = {'id':rules_list[j].id , 'name':rules_list[j]['attributes']['name'],'revision': rules_list[j]['attributes']['revision_number']}
                       }
                     }
                     var de_list = digitalData['de-'+library_id].data;
@@ -536,12 +565,14 @@
 
                       }
                       else{
-                        digitalData['newlibrary']['de'][de_uid] = {'id': de_list[j].id,'revision':de_list[j]['attributes']['revision_number']}
+                        digitalData['newlibrary']['de'][de_uid] = {'id': de_list[j].id,'name':de_list[j]['attributes']['name'],'revision':de_list[j]['attributes']['revision_number']}
                       }
                     }
                   }
                   /////
-                  final_de_list = [];
+                  var tbody = document.getElementById('pre-finallist-tbody');
+                  tbody.innerHTML = "";
+                  pre_final_de_list = [];
                   if(digitalData['newlibrary']['de']){
                     let de_obj = digitalData['newlibrary']['de'];
                     for (var key in de_obj) {
@@ -549,13 +580,33 @@
                         if((digitalData.stageups[key] && digitalData.stageups[key].revision >= de_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= de_obj[key].revision)){
                         }
                         else{
-                          final_de_list.push({'id':de_obj[key].id,'type':'data_elements'})
+                          pre_final_de_list.push({'id':de_obj[key].id,'name':de_obj[key].name,'type':'data_elements'})
+                          let tr = document.createElement('tr');
+                          let dis_type = document.createElement('td');
+                          dis_type.innerHTML = 'data-element'
+                          let dis_name = document.createElement('td');
+                          dis_name.innerHTML = de_obj[key].name;
+                          let dis_rn = document.createElement('td');
+                          dis_rn.innerHTML = de_obj[key].revision;
+                          let dis_check = document.createElement('td');
+                          let dis_input = document.createElement('input');
+                          dis_input.type = 'checkbox';
+                          dis_input.value = de_obj[key].id+"type:data_elements";
+                          dis_input.id = de_obj[key].id;
+                          dis_input.name = 'final_list';
+                          dis_input.checked = true;
+                          dis_check.appendChild(dis_input);
+                          tr.appendChild(dis_type);
+                          tr.appendChild(dis_name);
+                          tr.appendChild(dis_rn);
+                          tr.appendChild(dis_check);
+                          tbody.appendChild(tr);
                         }
                       }
                     }
                   }
                   //
-                  final_rule_list = [];
+                  pre_final_rule_list = [];
                   if(digitalData['newlibrary']['rules']){
                     let rule_obj = digitalData['newlibrary']['rules'];
                     for (var key in rule_obj) {
@@ -563,13 +614,33 @@
                         if((digitalData.stageups[key] && digitalData.stageups[key].revision >= rule_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= rule_obj[key].revision)){
                         }
                         else{
-                          final_rule_list.push({'id':rule_obj[key].id,'type':'rules'})
+                          pre_final_rule_list.push({'id':rule_obj[key].id,'name':rule_obj[key].name,'type':'rules'})
+                          let tr = document.createElement('tr');
+                          let dis_type = document.createElement('td');
+                          dis_type.innerHTML = 'Rule'
+                          let dis_name = document.createElement('td');
+                          dis_name.innerHTML = rule_obj[key].name;
+                          let dis_rn = document.createElement('td');
+                          dis_rn.innerHTML = rule_obj[key].revision;
+                          let dis_check = document.createElement('td');
+                          let dis_input = document.createElement('input');
+                          dis_input.type = 'checkbox';
+                          dis_input.value = rule_obj[key].id+"type:rules";
+                          dis_input.id = rule_obj[key].id;
+                          dis_input.name = 'final_list';
+                          dis_input.checked = true;
+                          dis_check.appendChild(dis_input);
+                          tr.appendChild(dis_type);
+                          tr.appendChild(dis_name);
+                          tr.appendChild(dis_rn);
+                          tr.appendChild(dis_check);
+                          tbody.appendChild(tr);
                         }
                       }
                     }
                   }
                   ///
-                  final_ext_list = [];
+                  pre_final_ext_list = [];
                   if(digitalData['newlibrary']['extensions']){
                     let ext_obj = digitalData['newlibrary']['extensions'];
                     for (var key in ext_obj) {
@@ -577,14 +648,35 @@
                         if((digitalData.stageups[key] && digitalData.stageups[key].revision >= ext_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= ext_obj[key].revision)){
                         }
                         else{
-                          final_ext_list.push({'id':ext_obj[key].id,'type':'extensions'})
+                          pre_final_ext_list.push({'id':ext_obj[key].id,'name':ext_obj[key].name,'type':'extensions'})
+                          let tr = document.createElement('tr');
+                          let dis_type = document.createElement('td');
+                          dis_type.innerHTML = 'Extension'
+                          let dis_name = document.createElement('td');
+                          dis_name.innerHTML = ext_obj[key].name;
+                          let dis_rn = document.createElement('td');
+                          dis_rn.innerHTML = ext_obj[key].revision;
+                          let dis_check = document.createElement('td');
+                          let dis_input = document.createElement('input');
+                          dis_input.type = 'checkbox';
+                          dis_input.value = ext_obj[key].id+"type:extensions";
+                          dis_input.id = ext_obj[key].id;
+                          dis_input.name = 'final_list'
+                          dis_input.checked = true;
+                          dis_check.appendChild(dis_input);
+                          tr.appendChild(dis_type);
+                          tr.appendChild(dis_name);
+                          tr.appendChild(dis_rn);
+                          tr.appendChild(dis_check);
+                          tbody.appendChild(tr);
                         }
                       }
                     }
                   }
                   ////
+
                   document.getElementById(`step-4`).classList.remove('active');
-                  document.getElementById(`step-5`).classList.add('active');
+                  document.getElementById(`step-42`).classList.add('active');
                 }
               }
               const stepfilterTimeout = setTimeout(newData, 2000);
@@ -597,6 +689,26 @@
              
              ////
          }
+         function stepFourtwo(){
+          const final_checked = document.querySelectorAll('input[name="final_list"]:checked');
+          final_ext_list = [], final_de_list = [], final_rule_list =[];
+          for(k=0;k<final_checked.length;k++){
+            var final_sort = final_checked[k].value;
+            var final_id = final_checked[k].id;
+            if(final_sort.indexOf('type:data_elements') > -1){
+              final_de_list.push({'id':final_id,'type':'data_elements'})
+            }
+            else if(final_sort.indexOf('type:extensions') > -1){
+              final_ext_list.push({'id':final_id,'type':'extensions'})
+            }
+            else if(final_sort.indexOf('type:rules') > -1){
+              final_rule_list.push({'id':final_id,'type':'rules'})
+            }
+          }
+          document.getElementById(`step-42`).classList.remove('active');
+          document.getElementById(`step-5`).classList.add('active');
+         }
+
          function stepFive(){
           library_name = document.getElementById('library_name').value;
           newlibraryapiURL = 'https://reactor.adobe.io/properties/'+digitalData['propertyID']+'/libraries'
