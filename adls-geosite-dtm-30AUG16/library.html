@@ -137,11 +137,21 @@
       <button onclick="prevStep('2','3')">Previous</button>
       <button onclick="stepThree()">Next</button>
     </div>
+    <div class="form-step" id="step-32">
+      <h2>Step 3.2: Options Available  </h2>
+      <input type="radio" id="merge-lib" name="lib-opt" value="merge">
+      <label for="merge-lib">You want to Merge two or more Libraries ?</label><br>
+      <input type="radio" id="build-lib" name="lib-opt" value="build">
+      <label for="build-lib">You want to build any Library ?</label><br>
+      <br>
+      <button onclick="prevStep('3','32')">Previous</button>
+      <button onclick="stepThreetwo()">Next</button>
+    </div>
     <div class="form-step" id="step-4">
       <h2>Step 4.1: Select the Library to Merge</h2>
       <p id="library-details"></p>
       <br>
-      <button onclick="prevStep('3','4')">Previous</button>
+      <button onclick="prevStep('32','4')">Previous</button>
       <button onclick="stepFour()">Next</button>
     </div>
     <div class="form-step" id="step-42">
@@ -162,6 +172,13 @@
       <button onclick="prevStep('4','42')">Previous</button>
       <button onclick="stepFourtwo()">Next</button>
     </div>
+    <div class="form-step" id="step-43">
+      <h2>Step 4.3: Select the Library to Build</h2>
+      <p id="library-details-2"></p>
+      <br>
+      <button onclick="prevStep('32','43')">Previous</button>
+      <button onclick="stepFourthree()">Next</button>
+    </div>
     <div class="form-step" id="step-5">
       <h2>Step 5: Input the Library Name</h2>
       <label for="library_name">Library Name:</label>
@@ -170,9 +187,30 @@
       <button onclick="stepFive()">Create New Library</button>
     </div>
     <div class="form-step" id="step-6">
-      <h2>Step 6: Success Message Display</h2>
-      <p>Created new library</p>
-      <br>
+      <h2>Step 6: Next Steps</h2>
+      <p id="successMessage" style="display: none;"> Success fully created the Library</p>
+      <input type="radio" id="dev-build" name="lib-select" value="Dev">
+      <label for="dev-build">You want to build to any Dev environment?</label><br>
+      <input type="radio" id="stage-build" name="lib-select" value="Stage">
+      <label for="stage-build">You want to build to Stage environment?</label><br>
+      <button id="build-previous" onclick="prevStep('43','6')" style="display: none;">Previous</button>
+      <button id="close-session" style="display: none;">Close Session</button>
+      <button onclick="stepSix()">Next</button>
+    </div>
+    <div class="form-step" id="step-71">
+      <h2>Step 7.1: Environment list</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Radio</th>
+            <th>Name</th>
+            <th>Library</th>
+          </tr>
+        </thead>
+        <tbody id="env-tbody">
+        </tbody>
+      </table>
+      <button onclick="stepSeven()">Next</button>
     </div>
   </div>
       <script>
@@ -454,7 +492,7 @@
                          }
                      }
                      document.getElementById(`step-3`).classList.remove('active');
-                     document.getElementById(`step-4`).classList.add('active');
+                     document.getElementById(`step-32`).classList.add('active');
                      clearTimeout(stepthreeTimeout);
              }
              }
@@ -468,11 +506,114 @@
              ////
              
          }
+         function stepThreetwo(){
+          document.getElementById("error-message").style.display ="none";
+          const library_opt = document.querySelector('input[name="lib-opt"]:checked').value;
+          if(library_opt == 'merge'){
+            document.getElementById(`step-32`).classList.remove('active');
+            document.getElementById(`step-4`).classList.add('active');
+          }
+          else if(library_opt == 'build'){
+            digitalData['environmentDetails'] = {};
+          digitalData['libraryDetails'] = {};
+          console.log(digitalData)
+          document.getElementById("error-message").style.display ="none";
+             const property_id = document.querySelector('input[name="property"]:checked').value;
+             digitalData['propertyID'] = property_id;
+             let name1 = "environmentDetails";
+             const apiUrl1 = 'https://reactor.adobe.io/properties/'+property_id+'/environments';
+             var status = fetchDataWithHeaders(apiUrl1, customHeaders, name1);
+             function getEnvironmentDetails(){
+              if(digitalData.environmentDetails && digitalData.environmentDetails.data && digitalData.environmentDetails.data.length > 0){
+                var envDetails = digitalData.environmentDetails.data;
+                for(i=0;i<envDetails.length;i++){
+                  digitalData[envDetails[i].id] = {'name': envDetails[i].attributes.name,'stage': envDetails[i].attributes.stage}
+                }
+                let name = "libraryDetails";
+             const apiUrl = 'https://reactor.adobe.io/properties/'+property_id+'/libraries';
+             var status = fetchDataWithHeaders(apiUrl, customHeaders, name);
+             function displayLibrary(){
+                 if(digitalData.libraryDetails && digitalData.libraryDetails.data && digitalData.libraryDetails.data.length > 0 ){
+                     var libraryDetails = digitalData.libraryDetails.data;
+                     var library_details = document.getElementById("library-details-2");
+                     document.getElementById("library-details").innerHTML = "";
+                     for(i=0;i<libraryDetails.length;i++){
+                         if(libraryDetails[i].attributes.state == "development"){
+                          var environment = libraryDetails[i].relationships.environment;
+                          if(environment.data == null){
+                            devenvironment = "no environment"
+                          }
+                          else{
+                            environmentid = environment.data.id;
+                            devenvironment = digitalData[environmentid].name
+                          }
+                         var input = document.createElement('input');
+                         input.type = 'radio';
+                         input.name = 'library-2'
+                         input.value = libraryDetails[i].id;
+                         input.id = libraryDetails[i].id;
+                         var label = document.createElement('label');
+                         label.for = libraryDetails[i].id;
+                         label.innerHTML = libraryDetails[i].attributes.name+"["+devenvironment+"]";
+                         var br = document.createElement('br');
+                         library_details.appendChild(input);
+                         library_details.appendChild(label);
+                         library_details.appendChild(br);
+                         }
+                         else if(libraryDetails[i].attributes.state == "submitted"){
+                          stageups_id = libraryDetails[i].relationships.upstream_library.data.id;
+                          const stageupsextapiUrl = 'https://reactor.adobe.io/libraries/'+stageups_id+'/extensions';
+                          const stageupsruleapiUrl = 'https://reactor.adobe.io/libraries/'+stageups_id+'/rules';
+                          const stageupsdeapiUrl = 'https://reactor.adobe.io/libraries/'+stageups_id+'/data_elements';
+                          var stageupsext = fetchDataWithHeaders(stageupsextapiUrl, customHeaders, 'stageups-ext');
+                          var stageupsrule = fetchDataWithHeaders(stageupsruleapiUrl, customHeaders, 'stageups-rule');
+                          var stageupsde = fetchDataWithHeaders(stageupsdeapiUrl, customHeaders, 'stageups-de');
+                          function stageups(){
+                            if(digitalData['stageups-de'] && digitalData['stageups-rule'] && digitalData['stageups-ext']){
+                              clearTimeout(stepstageupsTimeout);
+                              digitalData['stageups'] = {};
+                              var stageups_ext =  digitalData['stageups-ext'].data
+                              for(p=0;p<stageups_ext.length;p++){
+                                stageups_ext_pid = stageups_ext[p].links.origin;
+                                stageups_ext_pid = stageups_ext_pid.split('extensions/')
+                                digitalData['stageups'][stageups_ext_pid[1]] = {'id':stageups_ext[p].id,'revision':stageups_ext[p].attributes.revision_number}
+                              }
+                              var stageups_rule =  digitalData['stageups-rule'].data
+                              for(p=0;p<stageups_rule.length;p++){
+                                stageups_rule_pid = stageups_rule[p].links.origin;
+                                stageups_rule_pid = stageups_rule_pid.split('rules/')
+                                digitalData['stageups'][stageups_rule_pid[1]] = {'id':stageups_rule[p].id,'revision':stageups_rule[p].attributes.revision_number}
+                              }
+                              var stageups_de =  digitalData['stageups-de'].data
+                              for(p=0;p<stageups_de.length;p++){
+                                stageups_de_pid = stageups_de[p].links.origin;
+                                stageups_de_pid = stageups_de_pid.split('data_elements/')
+                                digitalData['stageups'][stageups_de_pid[1]] = {'id':stageups_de[p].id,'revision':stageups_de[p].attributes.revision_number}
+                              }
+                            }
+                            
+                          }
+                          const stepstageupsTimeout = setTimeout(stageups, 2000);
+                         }
+                     }
+                     document.getElementById(`step-32`).classList.remove('active');
+                     document.getElementById(`step-43`).classList.add('active');
+                     clearTimeout(stepthreeTimeout);
+             }
+             }
+             const stepthreeTimeout = setTimeout(displayLibrary, 2000);
+                clearTimeout(stepenvTimeout);
+              }
+             }
+            const stepenvTimeout = setTimeout(getEnvironmentDetails, 2000);
+          }
+         }
          function stepFour() {
           document.getElementById("error-message").style.display ="none";
              const library_list = document.querySelectorAll('input[name="library"]:checked');
              digitalData['selectedlibrary'] = [];
              const upsapiUrl = 'https://reactor.adobe.io/libraries/'+library_list[0].value+'/upstream_library'
+             console.log(upsapiUrl);
              var ups = fetchDataWithHeaders(upsapiUrl, customHeaders, 'ups');
              function upstreamData(){
               if(digitalData.ups && digitalData.ups.data && digitalData.ups.data.id){
@@ -690,6 +831,7 @@
              ////
          }
          function stepFourtwo(){
+          document.getElementById("error-message").style.display ="none";
           const final_checked = document.querySelectorAll('input[name="final_list"]:checked');
           final_ext_list = [], final_de_list = [], final_rule_list =[];
           for(k=0;k<final_checked.length;k++){
@@ -708,6 +850,16 @@
           document.getElementById(`step-42`).classList.remove('active');
           document.getElementById(`step-5`).classList.add('active');
          }
+         ///
+         function stepFourthree(){
+          const build_lib_id = document.querySelector('input[name="library-2"]:checked').value;
+          if(build_lib_id){
+            digitalData['buildlib'] = build_lib_id;
+            document.getElementById(`step-43`).classList.remove('active');
+            document.getElementById(`step-6`).classList.add('active');
+          }
+         }
+         ///
 
          function stepFive(){
           library_name = document.getElementById('library_name').value;
@@ -724,6 +876,8 @@
             if(digitalData.newlibraryid && digitalData.newlibraryid.data){
               function successMessage(){
               if(digitalData['new_ext'] && digitalData['new_de'] && digitalData['new_rule']){
+                var dis_messgae = document.getElementById('successMessage');
+                dis_messgae.style.display = 'block'
                 document.getElementById(`step-5`).classList.remove('active');
                 document.getElementById(`step-6`).classList.add('active');
                 clearTimeout(finalstepTimeout1)
@@ -753,6 +907,96 @@
           }
           const stepnewlibcreatTimeout = setTimeout(createLibrary, 2000);
          }
+         function stepSix(){
+          const lib_build = document.querySelector('input[name="lib-select"]:checked').value;
+          if(lib_build == 'Dev'){
+            env_details_6 = digitalData.environmentDetails.data;
+            lib_details_6 = digitalData.libraryDetails.data;
+            var env_list_7 = document.getElementById('env-tbody');
+            env_list_7.innerHTML = "";
+            for(i=0;i<env_details_6.length;i++){
+              if(env_details_6[i].attributes.stage =="development"){
+                let tr = document.createElement('tr');
+                let td_radio = document.createElement('td');
+                let input_radio = document.createElement('input');
+                input_radio.type = 'radio';
+                input_radio.id = env_details_6[i].id;
+                input_radio.name = 'environment-7';
+                flag_6 = 'empty'
+                let td_name = document.createElement('td');
+                td_name.innerHTML = env_details_6[i].attributes.name;
+                env_name_6 = "";
+                 if(env_details_6[i].relationships.library && env_details_6[i].relationships.library.data != null){
+                  var lib_id_6 = env_details_6[i].relationships.library.data.id;
+                  for(j=0;j<lib_details_6.length;j++){
+                    if(lib_details_6[j].id == lib_id_6){
+                      flag_6 = 'attached:'+lib_id_6
+                      env_name_6 = lib_details_6[j].attributes.name;
+                    }
+                  }
+                }
+                input_radio.value = flag_6
+                let td_env = document.createElement('td');
+                td_env.innerHTML = env_name_6;
+                td_radio.appendChild(input_radio);
+                tr.appendChild(td_radio);
+                tr.appendChild(td_name);
+                tr.appendChild(td_env);
+                env_list_7.appendChild(tr)
+              }
+            }
+            document.getElementById(`step-6`).classList.remove('active');
+            document.getElementById(`step-71`).classList.add('active');
+          }
+          else if(lib_build == 'Stage'){
+
+          }
+         }
+         ///
+         function stepSeven(){
+          var env_sel_7 = document.querySelector('input[name="environment-7"]:checked').value;
+          var env_sel_7_id = document.querySelector('input[name="environment-7"]:checked').id;
+          digitalData['env_none'] = {};
+          if(env_sel_7.indexOf('attached:') >-1){
+            env_sel_7 = env_sel_7.split('attached:')
+            env1_apiurl_7 = 'https://reactor.adobe.io/libraries/'+env_sel_7[1]+'/relationships/environment';
+            data_none = {'data': null}
+            var env_library_none = fetchPostDataWithHeaders(env1_apiurl_7, customHeaders, "env_none", data_none);
+            function addbuildEnv(){
+              clearTimeout(stepenvnoneTimeout)
+              if(digitalData['env_none'].links){
+                env_sel_id = digitalData.buildlib || digitalData.newlibraryid.data.id;
+                env2_apiurl_7 = 'https://reactor.adobe.io/libraries/'+env_sel_id+'/relationships/environment';
+                data_update = {'data': { "id": env_sel_7_id,"type": "environments"}}
+                var env_library_update = fetchPostDataWithHeaders(env2_apiurl_7, customHeaders, "env_update", data_update);
+                function buildEnv(){
+              if(digitalData['env_update']){
+                clearTimeout(steplibbuildTimeout);
+                lib_apirul_7 = 'https://reactor.adobe.io/libraries/'+env_sel_id+'/builds'
+                var lib_build_dev = fetchPostDataWithHeaders(lib_apirul_7,customHeaders,"library_build");
+              }
+            }
+            const steplibbuildTimeout = setTimeout(buildEnv, 2000);
+              }
+            }
+            const stepenvnoneTimeout = setTimeout(addbuildEnv, 2000);
+          }
+          else{
+            env_sel_id = digitalData.buildlib || digitalData.newlibraryid.data.id;
+            env2_apiurl_7 = 'https://reactor.adobe.io/libraries/'+env_sel_id+'/relationships/environment';
+            data_update = {'data': { "id": env_sel_7_id,"type": "environments"}};
+            var env_library_update2 = fetchPostDataWithHeaders(env2_apiurl_7, customHeaders, "env_update", data_update);
+            function buildEnv(){
+              if(digitalData['env_update']){
+                clearTimeout(steplibbuildTimeout);
+                lib_apirul_7 = 'https://reactor.adobe.io/libraries/'+env_sel_id+'/builds';
+                var lib_build_dev = fetchPostDataWithHeaders(lib_apirul_7,customHeaders,"library_build");
+              }
+            }
+            const steplibbuildTimeout = setTimeout(buildEnv, 2000);
+          }
+         }
+         ///
          function prevStep(n,p) {
            document.getElementById(`step-`+p).classList.remove('active');
            document.getElementById(`step-`+n).classList.add('active');
