@@ -577,7 +577,7 @@
                     let de_obj = digitalData['newlibrary']['de'];
                     for (var key in de_obj) {
                       if (de_obj.hasOwnProperty(key)) {
-                        if((digitalData.stageups[key] && digitalData.stageups[key].revision >= de_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= de_obj[key].revision)){
+                        if((digitalData.stageups && digitalData.stageups[key] && digitalData.stageups[key].revision >= de_obj[key].revision)|| (digitalData.devups && digitalData.devups[key] && digitalData.devups[key].revision >= de_obj[key].revision)){
                         }
                         else{
                           pre_final_de_list.push({'id':de_obj[key].id,'name':de_obj[key].name,'type':'data_elements'})
@@ -611,7 +611,7 @@
                     let rule_obj = digitalData['newlibrary']['rules'];
                     for (var key in rule_obj) {
                       if (rule_obj.hasOwnProperty(key)) {
-                        if((digitalData.stageups[key] && digitalData.stageups[key].revision >= rule_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= rule_obj[key].revision)){
+                        if((digitalData.stageups && digitalData.stageups[key] && digitalData.stageups[key].revision >= rule_obj[key].revision)|| (digitalData.devups && digitalData.devups[key] && digitalData.devups[key].revision >= rule_obj[key].revision)){
                         }
                         else{
                           pre_final_rule_list.push({'id':rule_obj[key].id,'name':rule_obj[key].name,'type':'rules'})
@@ -645,7 +645,7 @@
                     let ext_obj = digitalData['newlibrary']['extensions'];
                     for (var key in ext_obj) {
                       if (ext_obj.hasOwnProperty(key)) {
-                        if((digitalData.stageups[key] && digitalData.stageups[key].revision >= ext_obj[key].revision)|| (digitalData.devups[key] && digitalData.devups[key].revision >= ext_obj[key].revision)){
+                        if((digitalData.stageups && digitalData.stageups[key] && digitalData.stageups[key].revision >= ext_obj[key].revision)|| (digitalData.devups && digitalData.devups[key] && digitalData.devups[key].revision >= ext_obj[key].revision)){
                         }
                         else{
                           pre_final_ext_list.push({'id':ext_obj[key].id,'name':ext_obj[key].name,'type':'extensions'})
