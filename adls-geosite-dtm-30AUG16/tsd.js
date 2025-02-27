@@ -1,109 +1,300 @@
-<!DOCTYPE html>
-<html>
-  <title>Testing Page</title>
-    <style>
-      body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-}
-.container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    height: 100%;
-}
+//// start of KPI Listing ///
+function tableToCSV() {
 
-.left-frame, .right-frame {
-    padding: 20px;
-    box-sizing: border-box;
-}
+    // Variable to store the final csv data
+    let csv_data = [];
 
-.left-frame {
-    background-color: #f0f0f0;
-}
+    // Get each row data
+    let rows = document.querySelectorAll('#kpi-table-list tr');
+    for (let i = 0; i < rows.length; i++) {
 
-    #csvContent_table table {
-        font-family: arial, sans-serif;
-        border-collapse: collapse;
-        width: 50%;
-      }
-      td, th, tr {
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 4px;
-        font-family: Calibri, sans-serif;
-        font-size: 12px;
+        // Get each column data
+        let cols = rows[i].querySelectorAll('#kpi-table-list td, #kpi-table-list th');
 
-      }
-      pre {
-            display: none;
-            background-color: #f3f3f3;
-            padding: 10px;
-            border: 1px solid #ccc;
-            overflow-x: auto;
+        // Stores each csv row data
+        let csvrow = [];
+        for (let j = 0; j < cols.length; j++) {
+            if(cols[j].innerHTML.indexOf('input')> -1){
+                var res = cols[j].childNodes[0].checked
+                csvrow.push(res);
+            }
+            else if(cols[j].innerHTML.indexOf('button')> -1){
+                var res = cols[j].childNodes[0].dataset.value;
+                csvrow.push(res);
+            }
+            else{
+                csvrow.push(cols[j].textContent);
+            }
         }
-        #copyButton {
-            margin-top: 10px;
-            cursor: pointer;
-        }
-        #left-modal-content{
-            padding: 20px;
-            background-color: #f0f0f0;
-            box-sizing: border-box;
-            display: none;
-            position: fixed; /* Sit on top of the page content */
-            top: 0;
-            left: 0;
-            right: 50%;
-            bottom: 0;
-            z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
-            cursor: pointer; /* Add a pointer on hover */
-        }
-        #view-details-modal{
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  font-size: 50px;
-  color: black;
-  transform: translate(-50%,-50%);
-  -ms-transform: translate(-50%,-50%);
+
+        // Combine each column value with comma
+        csv_data.push(csvrow.join(","));
+    }
+
+    // Combine each row data with new line character
+    csv_data = csv_data.join('\n');
+
+    // Call this function to download csv file  
+    downloadCSVFile(csv_data);
+
 }
-    </style>
-<head>
-</head>
-<body>
-  <div class="container">
-    <div id="left-modal-content">
-        <div id="view-details-modal">
-        <table id="view-detail-table">
-        </table>
-        <div><button id="view-details-modal-close">close</button><button id="view-details-modal-save">Save Changes</button></div>
-    </div>
-    </div>
-    <div class="left-frame" id="left-content">
-      <h2>upload josn file here</h2>
-      <input type="file" id="jsonInput" accept=".json">
-      <pre id="output"></pre>
-      <br>
-      <br>
 
-      <table id="kpi-table-list">
-        <tr>
-            <th>Checkbox</td>
-            <th>KPI</td>
-            <th>Discription</td>
-            <th>Details</td>
-        </tr>
-      </table>
-      <div id="kpi-buttons" style="display: none;"><button id="download-kpi-csv" onclick="tableToCSV()">Download KPI in CSV</button> <button id="generate-tsd">generare TSD</button></div>
-    </div>
-    <div class="right-frame">
-      <h2>Review TSD</h2>
-    <table id="tableContainer">
+function downloadCSVFile(csv_data) {
 
-    </table>
-    </div>
-  </div>
-    <script src="index.js"></script>
-</body>
-</html>
+    // Create CSV file object and feed
+    // our csv_data into it
+    CSVFile = new Blob([csv_data], {
+        type: "text/csv"
+    });
+
+    // Create to temporary link to initiate
+    // download process
+    let temp_link = document.createElement('a');
+
+    // Download csv file
+    temp_link.download = "kpi.csv";
+    let url = window.URL.createObjectURL(CSVFile);
+    temp_link.href = url;
+
+    // This link should not be displayed
+    temp_link.style.display = "none";
+    document.body.appendChild(temp_link);
+
+    // Automatically click the link to
+    // trigger download
+    temp_link.click();
+    document.body.removeChild(temp_link);
+}
+
+function OpenLeftModalContent(){
+    document.getElementById('view-details-modal').setAttribute("title",this.id);
+    const list = document.getElementById("view-detail-table");
+    while (list.hasChildNodes()) {
+        list.removeChild(list.firstChild);
+    }
+    var uth = document.createElement('tr');
+        var ukeyth = document.createElement('th');
+        ukeyth.textContent = "key";
+        var uvalth= document.createElement('th');
+        uvalth.textContent = "value";
+        uth.appendChild(ukeyth);
+        uth.appendChild(uvalth);
+        document.getElementById('view-detail-table').appendChild(uth);
+    var useKey = this.id;
+    useKey = useKey.replace("u-","");
+    //console.log(useKey);
+    var useDetail = window.kpiList[useKey]["detail"] || {};
+    //console.log(useDetail);
+    for(key in useDetail){
+        var utr = document.createElement('tr');
+        var ukeytd = document.createElement('td');
+        ukeytd.textContent = key;
+        var uvaltd = document.createElement('td');
+        uvalinput = document.createElement('input');
+        uvalinput.type = "text";
+        uvalinput.value = useDetail[key];
+        uvaltd.appendChild(uvalinput);
+        utr.appendChild(ukeytd);
+        utr.appendChild(uvaltd);
+        document.getElementById('view-detail-table').appendChild(utr);
+
+    }
+    document.getElementById('left-modal-content').style.display = 'block'
+    document.getElementById('left-content').style.display = 'none';
+}
+function OpenLeftContent(){
+    document.getElementById('left-modal-content').style.display = 'none'
+    document.getElementById('left-content').style.display = 'block';
+}
+function SaveKPIChanges(){
+    var updateKey = document.getElementById("view-details-modal").title;
+    updateKey = updateKey.replace('u-','');
+    var updateTabletd = document.querySelectorAll("#view-detail-table td");
+    var updateTableinput = document.querySelectorAll("#view-detail-table input");
+    window.kpiList[updateKey]['detail'] = {};
+    for(i=0;i<updateTableinput.length;i++){
+        var newKey = updateTabletd[i*2].textContent;
+        var newVal = updateTableinput[i].value;
+        window.kpiList[updateKey]['detail'][newKey] = newVal;
+    }
+
+    document.getElementById('left-modal-content').style.display = 'none'
+    document.getElementById('left-content').style.display = 'block';
+}
+
+document.getElementById('view-details-modal-close').addEventListener("click", OpenLeftContent);
+document.getElementById('view-details-modal-save').addEventListener("click", SaveKPIChanges);
+
+document.getElementById('jsonInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    //declare kpi table values here
+    var kpiName = "n/a";
+    var kpiFlag = false;
+    var kpiDetail = {};
+    var defaultText = {
+        'pageView1' : 'Ability to view no of times user visited the" ',
+        'pageView2' : ' "Page',
+        'link1' : 'Ability to know how many users click on " ',
+        'link2' : ' "'
+    }
+    function createKPIList(t){
+        //console.log(t)
+        kpiName = window.kpiList[t]["kpi"] || "n/a"; 
+        kpiFlag = window.kpiList[t]["flag"] || false;
+        kpiDetail = window.kpiList[t]["detail"] || {};
+        var kpi = window.kpiList[t];
+        kpiValue = JSON.stringify(kpi);
+        kpiValue = kpiValue.replaceAll(',','');
+        var checkboxtd = document.createElement('td');
+        var checkboxinput = document.createElement('input');
+        checkboxinput.type = "checkbox";
+        if(kpiFlag == false){checkboxinput.checked = "checked"}
+        checkboxtd.appendChild(checkboxinput);
+        //console.log(checkboxtd)
+        var kpitd = document.createElement('td');
+        kpitd.textContent = kpiName;
+        var destd = document.createElement('td');
+        //console.log(destd)
+        if(kpiName == 'pageView'){destd.textContent = defaultText['pageView1']+kpiDetail.name+defaultText['pageView2']}
+        else if(kpiName == 'linkClick'){destd.textContent = defaultText['link1']+kpiDetail.linkname+defaultText['link2']}
+        var btntd = document.createElement('td');
+        var vdbtn = document.createElement('button');
+        vdbtn.id = "u-"+t;
+        vdbtn.setAttribute("data-value",kpiValue);
+        var vdu = document.createElement('u');
+        vdu.textContent = "view detail";
+        vdbtn.appendChild(vdu);
+        btntd.appendChild(vdbtn);
+        //console.log(btntd)
+        var htr = document.createElement('tr');
+        //console.log(htr)
+        htr.appendChild(checkboxtd);
+        htr.appendChild(kpitd);
+        htr.appendChild(destd);
+        htr.appendChild(btntd);
+        document.getElementById('kpi-table-list').appendChild(htr);
+        var test = 'u-'+t;
+        document.getElementById(test).addEventListener("click", OpenLeftModalContent);
+    }
+
+    function pageViewKPI(t){
+    }
+
+    function linkClickKPI(t){
+    
+    }
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const fileContent = event.target.result;
+        try {
+          const jsonData = JSON.parse(fileContent);
+          window.kpiList = jsonData || {};
+          for( key in jsonData){
+            //console.log(key);
+            if(jsonData[key]['kpi'] == 'pageView'){createKPIList(key); pageViewKPI(key)}
+            else if(jsonData[key]['kpi'] == 'linkClick'){createKPIList(key);linkClickKPI(key)}
+          }
+          document.getElementById('kpi-buttons').style.display = 'block';
+
+        } catch (error) {
+          document.getElementById('output').textContent = 'Error parsing JSON: ' + error.message;
+        }
+      };
+      
+      reader.readAsText(file);
+    }
+  });
+
+  ////Start of TSD creation
+  var objMapper = {
+    'name': 'vzdl.page.name',
+    'linkname': 'vzdl.page.link',
+    'url':'vzdl.page.url',
+    'sourceChannel':'vzdl.page.sourceChannel',
+    'displayChannel':'vzdl.page.displayChannel'
+  }
+
+  var objVariable = {
+    'vzdl.page.name':'page/evar70',
+    'vzdl.page.link':'eVar27',
+    'vzdl.page.url':'eVar11',
+    'vzdl.page.sourceChannel':'eVar1',
+    'vzdl.page.displayChannel':'eVar2'
+  }
+  function createVzdl(key,p,value){
+    console.log(p);
+    console.log(value);
+    var path = objMapper[p];
+    console.log(path);
+    if(!path){
+        return 
+    }
+    var path1 = path.split('.');
+    window.kpiList[key]['dataLayer'] = window.kpiList[key]['dataLayer'] || {};
+    window.kpiList[key]['mapper'] = window.kpiList[key]['mapper'] || {};
+    window.kpiList[key]['mapper'][path] = window.kpiList[key]['mapper'][path] || {};
+    var pt = 0;
+    var pk = window.kpiList[key]['dataLayer']
+    while(pt!=path1.length-1){
+        pk[path1[pt]] = pk[path1[pt]] || {};
+        pk = pk[path1[pt]];
+        pt++
+    }
+    pk[path1[path1.length-1]] = value;
+    var variable = objVariable[path];
+    window.kpiList[key]['mapper'][path]['value'] = value;
+    window.kpiList[key]['mapper'][path]['variable'] = variable;
+  }
+
+  function genearateTSD(){
+    var tsdList = window.kpiList;
+    var tsdName = "n/a";
+    var tsdFlag = false;
+    var tsdDetail = {};
+    var tsdDesc = {
+        'pageView1' : 'Trigger "page view" event whenever user lands or reloads the " ',
+        'pageView2' : ' "Page',
+        'link1' : 'Add the following data-track attribute on" ',
+        'link2' : ' " element'
+    }
+    for(key in tsdList){
+        tsdName = window.kpiList[key]["kpi"] || "n/a";
+        tsdFlag = window.kpiList[key]["flag"] || false;
+        tsdDetail = window.kpiList[key]["detail"] || {};
+        for(key1 in tsdDetail){
+            createVzdl(key, key1,tsdDetail[key1]);
+        }
+        var tsdtr = document.createElement('tr');
+        var tsdth = document.createElement('th');
+        if(tsdName == 'pageView'){tsdth.textContent= tsdDesc['pageView1']+tsdDetail.name+tsdDesc['pageView2']}
+        else if(tsdName == 'linkClick'){tsdth.textContent = tsdDesc['link1']+tsdDetail.linkname+tsdDesc['link2']}
+        tsdtr.appendChild(tsdth);
+        document.getElementById('tableContainer').appendChild(tsdtr);
+        var vzdltr = document.createElement('tr');
+        var vzdlth = document.createElement('th');
+        var vzdlpre = document.createElement('pre');
+        vzdlpre.style.display = 'block'
+        if(tsdName == 'pageView'){vzdlpre.textContent = JSON.stringify(kpiList[key].dataLayer, null, 2);}
+        else if(tsdName == 'linkClick'){vzdlpre.textContent = 'data-track="'+tsdDetail.linkname+'"'}
+        vzdlth.appendChild(vzdlpre); 
+        vzdltr.appendChild(vzdlth);
+        document.getElementById('tableContainer').appendChild(vzdltr);
+        var variableList = window.kpiList[key]['mapper'];
+        for(k in variableList){
+            var vartr = document.createElement('tr');
+            var pathth = document.createElement('th');
+            pathth.textContent = k;
+            var varth = document.createElement('th');
+            varth.textContent = variableList[k]['variable'];
+            var valth = document.createElement('th');
+            valth.textContent = variableList[k]['value'];
+            vartr.appendChild(pathth);
+            vartr.appendChild(varth);
+            vartr.appendChild(valth);
+            document.getElementById('tableContainer').appendChild(vartr);
+        }
+        
+  }
+}
+  document.getElementById('generate-tsd').addEventListener('click', genearateTSD)
