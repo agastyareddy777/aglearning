@@ -248,6 +248,7 @@ document.getElementById('jsonInput').addEventListener('change', function(event) 
   }
 
   function genearateTSD(){
+    document.getElementById('tsd-content').style.display = "block";
     var tsdList = window.kpiList;
     var tsdName = "n/a";
     var tsdFlag = false;
@@ -265,21 +266,29 @@ document.getElementById('jsonInput').addEventListener('change', function(event) 
         for(key1 in tsdDetail){
             createVzdl(key, key1,tsdDetail[key1]);
         }
-        var tsdtr = document.createElement('tr');
-        var tsdth = document.createElement('th');
-        if(tsdName == 'pageView'){tsdth.textContent= tsdDesc['pageView1']+tsdDetail.name+tsdDesc['pageView2']}
-        else if(tsdName == 'linkClick'){tsdth.textContent = tsdDesc['link1']+tsdDetail.linkname+tsdDesc['link2']}
-        tsdtr.appendChild(tsdth);
-        document.getElementById('tableContainer').appendChild(tsdtr);
-        var vzdltr = document.createElement('tr');
-        var vzdlth = document.createElement('th');
+        var cnt = key.replace('kpi','');
+        var section1h4 = document.createElement('h4');
+        if(tsdName == 'pageView'){section1h4.textContent= cnt+"."+tsdDesc['pageView1']+tsdDetail.name+tsdDesc['pageView2']}
+        else if(tsdName == 'linkClick'){section1h4.textContent = cnt+"."+tsdDesc['link1']+tsdDetail.linkname+tsdDesc['link2']}
+        document.getElementById('tsd-display-content').appendChild(section1h4);
+        var section2h4 = document.createElement('h4');
+        section2h4.textContent = "Developer Instructions";
+        section2h4.style.color = "blue";
+        document.getElementById('tsd-display-content').appendChild(section2h4);
         var vzdlpre = document.createElement('pre');
         vzdlpre.style.display = 'block'
         if(tsdName == 'pageView'){vzdlpre.textContent = JSON.stringify(kpiList[key].dataLayer, null, 2);}
         else if(tsdName == 'linkClick'){vzdlpre.textContent = 'data-track="'+tsdDetail.linkname+'"'}
-        vzdlth.appendChild(vzdlpre); 
-        vzdltr.appendChild(vzdlth);
-        document.getElementById('tableContainer').appendChild(vzdltr);
+        document.getElementById('tsd-display-content').appendChild(vzdlpre);
+        var section3h4 = document.createElement('h4');
+        section3h4.textContent = "Variable Mapping Details"
+        section3h4.style.color = "blue"
+        document.getElementById('tsd-display-content').appendChild(section3h4);
+        var vartab = document.createElement('table');
+        var vartabId = "tableContainer-"+key;
+        vartab.id = vartabId;
+        vartab.style.alignItems = "center"
+        document.getElementById('tsd-display-content').appendChild(vartab);
         var variableList = window.kpiList[key]['mapper'];
         for(k in variableList){
             var vartr = document.createElement('tr');
@@ -292,9 +301,26 @@ document.getElementById('jsonInput').addEventListener('change', function(event) 
             vartr.appendChild(pathth);
             vartr.appendChild(varth);
             vartr.appendChild(valth);
-            document.getElementById('tableContainer').appendChild(vartr);
+            document.getElementById(vartabId).appendChild(vartr);
         }
+        var hr = document.createElement('hr');
+        document.getElementById('tsd-display-content').appendChild(hr);
         
   }
 }
   document.getElementById('generate-tsd').addEventListener('click', genearateTSD)
+  document.getElementById("tsd-pdf").addEventListener('click', () => {
+    const element = document.querySelector('#tsd-content');
+    const options = {
+        filename: 'TSD.pdf',
+        margin: 0,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { 
+            unit: 'in', 
+            format: 'letter', 
+            orientation: 'portrait' 
+        }
+    };
+    html2pdf().set(options).from(element).save();
+});
